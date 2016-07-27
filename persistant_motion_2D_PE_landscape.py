@@ -17,7 +17,7 @@ def main(alpha, beta):
 	tau_av = alpha*r/prop_force_i
 	##time variables 
 	dt = 0.01
-	tmax = 10000.0
+	tmax = 50000.0
 	##time switch variables 
 	number_of_switches = 2.0*tmax/tau_av
 	
@@ -87,6 +87,7 @@ def main(alpha, beta):
 	np.savez(histfilename, H_rad=H_rad,bin_center_rad=bin_centers,domain_rad=domain_rad, U_landscape=U_landscape, prob_eq=prob_eq,alpha=alpha, beta=beta, tmax=tmax)
 	
 	plot2d(histfilename+".npz")
+	plt.close()
 	
 	return
 

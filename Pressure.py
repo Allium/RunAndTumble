@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 from scipy.signal import resample
 import matplotlib.pyplot as plt
 import os, glob, optparse
@@ -110,6 +111,7 @@ def pressure_pdf_file(histfile, nosave, verbose):
 	ax.plot(r,rho,   "b-", label="RTP")
 	ax.fill_between(r, 0, rho, color="b", alpha=0.1)
 	ax.plot(r_eq,rho_eq,"r-", label="Eq.")
+	ax.fill_between(r_eq, 0, rho_eq, color="r", alpha=0.1)
 	
 	## Accoutrements
 	ax.set_xlim([0.0,R+4.0])
@@ -118,14 +120,14 @@ def pressure_pdf_file(histfile, nosave, verbose):
 	ax.grid()
 	
 	## Wall
-	ax.plot(r_eq, U, "k--", label="$U(r)$")
+	ax.plot(r_eq, U*ax.get_ylim()[1]/U[-1], "k--", label="$U(r)$")
 	
 	##---------------------------------------------------------------
 	## PRESSURE
 	
 	## CALCULATIONS
-	p		= calc_pressure(r, rho, U, spatial=True)
-	p_eq	= calc_pressure(r_eq, rho_eq, U, spatial=True)
+	p		= calc_pressure(r, rho, r_eq, U, spatial=True)
+	p_eq	= calc_pressure(r_eq, rho_eq, r_eq, U, spatial=True)
 	
 	## PLOT
 	ax = axs[1]
@@ -141,9 +143,9 @@ def pressure_pdf_file(histfile, nosave, verbose):
 	ax.grid()
 	
 	## Wall
-	ax.plot(r_eq, U, "k--", label="$U(r)$")
+	ax.plot(r_eq, U*ax.get_ylim()[1]/U[-1], "k--", label="$U(r)$")
 
-	ax.legend(fontsize=fsl)
+	ax.legend(loc="best",fontsize=fsl)
 	
 	##---------------------------------------------------------------
 	
@@ -204,8 +206,8 @@ def pressure_dir(dirpath, nosave, verbose):
 		rho_eq = np.exp(-U) / np.trapz(np.exp(-U)*2*np.pi*r_eq, r_eq)
 		
 		## Pressure array
-		P[i] 	= calc_pressure(r, rho, U)
-		P_eq[i] = calc_pressure(r_eq, rho_eq, U)
+		P[i] 	= calc_pressure(r, rho, r_eq, U)
+		P_eq[i] = calc_pressure(r_eq, rho_eq, r_eq, U)
 		A[i], B[i] = a, b
 		
 	## ------------------------------------------------	
@@ -235,11 +237,11 @@ def pressure_dir(dirpath, nosave, verbose):
 	
 	
 	if not nosave:
-		plotfile = dirpath+"/PRESSab_scatter.png"
+		plotfile = dirpath+"/PRESSab_scatter.jpg"
 		fig.savefig(plotfile, dpi=2*fig.dpi)
 		if verbose: print me+"Plot saved to",plotfile
 
-	if verbose: print me+"Plotting",round(time.time()-t0,2),"seconds."
+	if verbose: print me+"Plotting",round(time()-t0,2),"seconds."
 	
 	return
 	
@@ -276,13 +278,17 @@ def filename_par(filename, searchstr):
 
 ##=============================================================================
 
-def calc_pressure(r,rho,U,spatial=False):
+def calc_pressure(r,rho,r_eq,U,spatial=False):
 	"""
 	Calculate pressure given density a a function of coordinate.
+	Uses array resampling rather than interpolation multiplication.
 	"""
 	
+	## Resample potential
+	if U.size!=r.size:	U = scipy.interpolate.interp1d(r_eq,U)(r)
+	
 	## Force from potential
-	force = resample(-np.gradient(U, r[1]-r[0]), r.size)
+	force = -np.gradient(U, r[1]-r[0])
 	
 	## Pressure
 	if spatial == True:
