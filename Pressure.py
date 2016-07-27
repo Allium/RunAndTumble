@@ -77,8 +77,7 @@ def pressure_pdf_file(histfile, nosave, verbose):
 	plotfile = os.path.dirname(histfile)+"/PRESSr"+os.path.basename(histfile)[6:-4]+".jpg"
 	
 	## Get pars from filename and convert to R (box size) and tau (memory time)
-	pars  = filename_pars(histfile)
-	[a,b] = [pars[key] for key in ["a","b"]]
+	a, b = filename_par(histfile, "_alpha"), filename_par(histfile, "_beta")
 	R = b
 	tau = a*b
 	
@@ -187,7 +186,7 @@ def pressure_dir(dirpath, nosave, verbose):
 	## Loop over files
 	for i,histfile in enumerate(histfiles):
 	
-		[a,b] = [filename_pars(histfile)[key] for key in ["a","b"]]
+		a, b = filename_par(histfile, "_alpha"), filename_par(histfile, "_beta")
 		R = b
 		tau = a*b
 		
@@ -265,30 +264,15 @@ def pressure_dir(dirpath, nosave, verbose):
 	
 ## ============================================================================
 
-def filename_pars(filename):
+def filename_par(filename, searchstr):
 	"""
 	Scrape filename for parameters and return a dict.
 	"""
-	
-	## alpha
-	start = filename.find("_alpha") + 6
+	start = filename.find(searchstr) + len(searchstr)
 	finish = start + 1
 	while unicode(filename[start:].replace(".",""))[:finish-start].isnumeric():
 		finish += 1
-	a = float(filename[start:finish])
-	
-	## beta
-	start = filename.find("_beta") + 5
-	finish = start + 1
-	while unicode(filename[start:].replace(".",""))[:finish-start].isnumeric():
-		finish += 1
-	b = float(filename[start:finish])
-	
-	## Collect into lists
-	names = ["a","b"]
-	pars  = [a,b]
-	
-	return dict(zip(names,pars))
+	return float(filename[start:finish])
 
 ##=============================================================================
 

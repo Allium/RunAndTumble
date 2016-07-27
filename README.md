@@ -1,7 +1,10 @@
 Persistent Motion
 =================
+Summer 2016
 
-Project explores the statistical behaviour of run-and-tumble particles (RTPs) using simulations.
+The project uses numerical simulation to explore the statistical behaviour of run-and-tumble particles (RTPs).
+
+Blah.
 
 
 Collaborators
