@@ -27,6 +27,7 @@ def main():
 			--nosave	False
 		-a	--plotall	False
 	"""
+	
 	me = "Pressure.main: "
 	t0 = time()
 	
@@ -211,16 +212,19 @@ def pressure_dir(dirpath, nosave, verbose):
 		A[i], B[i] = a, b
 		
 	## ------------------------------------------------	
-	
-	## Phase diagram plot
+	## Normalise pressure
 	
 	P /= P_eq
 	
-	figtit = "Pressure (normalised)"
-	fsa, fsl, fst = 16,12,18
+	## ------------------------------------------------	
+	## Phase diagram plot
+	
+	plotfile = dirpath+"/PRESSab_scatter.jpg"
+	figtit = "Pressure ($P_{\\rm eq}(\\alpha,\\beta)=1.0$)"
+	fsa, fsl, fst = 16,12,16
 
 	fig = plt.gcf(); ax = plt.gca()
-	plt.scatter(A, B, marker="o", c=P, s=500*P/P.max(), edgecolor="None", label="RT")
+	plt.scatter(A, B, marker="o", c=np.log(P), s=500*P/P.max(), edgecolor="None", label="RT")
 	plt.colorbar()
 	
 	ax.set_xscale("log");	ax.set_yscale("log")
@@ -230,14 +234,17 @@ def pressure_dir(dirpath, nosave, verbose):
 	ax.set_ylabel("$\\beta$",fontsize=fsa)
 	ax.grid()
 
-	fig.suptitle(figtit)
+	fig.suptitle(figtit, fontsize=fst)
 
 	## ------------------------------------------------	
-	## SAVING
+	## Lines plot
 	
+	
+	
+	## ------------------------------------------------	
+	## Save
 	
 	if not nosave:
-		plotfile = dirpath+"/PRESSab_scatter.jpg"
 		fig.savefig(plotfile, dpi=2*fig.dpi)
 		if verbose: print me+"Plot saved to",plotfile
 
@@ -292,7 +299,7 @@ def calc_pressure(r,rho,r_eq,U,spatial=False):
 	
 	## Pressure
 	if spatial == True:
-		P = -np.array([np.trapz(force[:i]*rho[:i], r[:i]) for i in xrange(r.size)])
+		P = -np.array([np.trapz(force[:i]*rho[:i], r[:i]) for i in range(1,r.size+1)])
 	else:
 		P = -np.trapz(force*rho, r)
 	

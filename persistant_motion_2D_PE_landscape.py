@@ -11,15 +11,16 @@ def main(alpha, beta):
 	##initial stuff (very specific, I know, but those four variables... that are like, muy importante and related to alpha and beta)
 	##alpha = (tau_av)*(prop_force)/radius
 	##beta = k*radius/(prop_force)
+	
 	k = 1.0
 	prop_force_i = 1.0
 	r = beta*prop_force_i/k
 	tau_av = alpha*r/prop_force_i
 	##time variables 
 	dt = 0.01
-	tmax = 50000.0
+	tmax = 5e5
 	##time switch variables 
-	number_of_switches = 2.0*tmax/tau_av
+	number_of_switches = 1.5*tmax/tau_av
 	
 	## array of times
 	tx = np.arange(0.00,tmax,dt)
@@ -86,8 +87,9 @@ def main(alpha, beta):
 	histfilename = "Datafiles/HISDAT_2D_alpha%s_beta%s_tmax%s" %(alpha, beta, tmax)
 	np.savez(histfilename, H_rad=H_rad,bin_center_rad=bin_centers,domain_rad=domain_rad, U_landscape=U_landscape, prob_eq=prob_eq,alpha=alpha, beta=beta, tmax=tmax)
 	
-	plot2d(histfilename+".npz")
-	plt.close()
+	# plt.close()
+	# plot2d(histfilename+".npz")
+	# plt.close()
 	
 	return
 
