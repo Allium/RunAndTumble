@@ -216,60 +216,80 @@ def pressure_dir(dirpath, nosave, verbose):
 	
 	P /= P_eq
 	
+	fsa, fsl, fst = 16,12,16
+	figtit = "Pressure ($P_{\\rm eq}(\\alpha,\\beta)=1.0$)"
+
 	## ------------------------------------------------	
 	## Phase diagram plot
 	
 	plotfile = dirpath+"/PRESSab_scatter.jpg"
-	figtit = "Pressure ($P_{\\rm eq}(\\alpha,\\beta)=1.0$)"
-	fsa, fsl, fst = 16,12,16
-
-	fig = plt.gcf(); ax = plt.gca()
+	fig = plt.figure(); ax = plt.gca()
+	
+	## Plot data with variable colour and size
 	plt.scatter(A, B, marker="o", c=np.log(P), s=500*P/P.max(), edgecolor="None", label="RT")
-	plt.colorbar()
+	cbar = plt.colorbar()
 	
 	ax.set_xscale("log");	ax.set_yscale("log")
 	# ax.set_xlim(left=0.0);	ax.set_ylim(bottom=0.0)
-	
 	ax.set_xlabel("$\\alpha$",fontsize=fsa)
 	ax.set_ylabel("$\\beta$",fontsize=fsa)
-	ax.grid()
-
+	cbar.set_label("$\\log P$", fontsize=fsa, rotation=270)
 	fig.suptitle(figtit, fontsize=fst)
-
-	## ------------------------------------------------	
-	## Lines plot
-	
-	
-	
-	## ------------------------------------------------	
-	## Save
+	ax.grid()
 	
 	if not nosave:
 		fig.savefig(plotfile, dpi=2*fig.dpi)
 		if verbose: print me+"Plot saved to",plotfile
-
-	if verbose: print me+"Plotting",round(time()-t0,2),"seconds."
 	
-	return
-	
-	"""
+	## ------------------------------------------------	
+	## Lines plot
+		
 	AA = np.unique(A)
 	BB = np.unique(B)
 	
 	## 2D pressure array: [A,B]
-		PP = -np.ones([AA.size,BB.size])
-		PP_WN = np.zeros(PP.shape)
-		for i in range(AA.size):
-			Aidx = (A==AA[i])
-			for j in range(BB.size):
-				Bidx = (B==BB[j])
-				Pidx = Aidx*Bidx
-				try:
-					PP[i,j] = P[Pidx]
-					PP_WN[i,j] = P_WN[Pidx]
-				except ValueError:
-					pass
-	"""				
+	PP = -np.ones([AA.size,BB.size])
+	PP_eq = np.zeros(PP.shape)
+	for i in range(AA.size):
+		Aidx = (A==AA[i])
+		for j in range(BB.size):
+			Bidx = (B==BB[j])
+			Pidx = Aidx*Bidx
+			try:
+				PP[i,j] = P[Pidx]
+				PP_eq[i,j] = P_eq[Pidx]
+			except ValueError:
+				# pass
+				PP[i,j] = np.nan
+				PP_eq[i,j] = np.nan
+	
+	plotfile = dirpath+"/PRESSab_line.jpg"
+	fig = plt.figure(); ax = plt.gca()
+	
+	# for i in range(BB.size):
+		# ax.plot(AA, PP[:,i], "o-", label="$\\beta="+str(BB[i])+"$")
+	# ax.set_xlabel("$\\alpha$",fontsize=fsa)
+	for i in range(AA.size):
+		ax.plot(BB, PP[i,:], "o-", label="$\\alpha="+str(AA[i])+"$")
+	ax.set_xlabel("$\\beta$",fontsize=fsa)
+	
+	ax.set_xlim(left=0.0);	ax.set_ylim(bottom=0.0)
+	# ax.set_xlim(right=2.0);	ax.set_ylim(top=2.0); plotfile = plotfile[:-4]+"_zoom.jpg"
+	
+	ax.set_ylabel("Pressure (normalised)",fontsize=fsa)
+	fig.suptitle(figtit, fontsize=fst)
+	ax.grid()
+	ax.legend(loc="best",fontsize=fsl)
+
+	if not nosave:
+		fig.savefig(plotfile, dpi=2*fig.dpi)
+		if verbose: print me+"Plot saved to",plotfile
+	
+	## ------------------------------------------------	
+
+	if verbose: print me+"Plotting",round(time()-t0,2),"seconds."
+	
+	return
 	
 ## ============================================================================
 
