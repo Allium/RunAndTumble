@@ -17,16 +17,20 @@ def main(alpha, beta):
 	r = beta*prop_force_i/k
 	tau_av = alpha*r/prop_force_i
 	##time variables 
+	tmax = 1e5
 	dt = 0.01
-	tmax = 5e5
-	##time switch variables 
-	number_of_switches = 1.5*tmax/tau_av
-	
-	## array of times
 	tx = np.arange(0.00,tmax,dt)
-	##setting switching time 
-	tau = np.random.exponential(tau_av, number_of_switches).cumsum()
+	##time switch variables -- don't overload memory
+	while True:
+		try:
+			number_of_switches = 1.1*tmax/tau_av
+			tau = np.random.exponential(tau_av, number_of_switches).cumsum()
+			break
+		except MemoryError:
+			tmax /= 10.0
+			print "Warning: tmax decimated.", tmax
 	N = tau.size
+	
 	##initial position
 	xo = 0.00
 	yo = 0.00
@@ -59,7 +63,7 @@ def main(alpha, beta):
 	plt.ylim([-stall_r,stall_r])
 	plt.title("Density ($\\alpha = %s$, $\\beta = %s$, tmax = %s)" %(alpha, beta,tmax))
 	histnamexy = "PDFxy_2D_tmax%s_alpha%s_beta%s.png" %(tmax,alpha,beta)
-	#plt.show()
+	plt.show()
 	#plt.savefig("Results/PDFxy_2D_tmax%s_alpha%s_beta%s.png" %(tmax,alpha,beta))
 	#plt.close()
 
@@ -115,19 +119,7 @@ def random_prop_force(tau,tx,prop_force,angle_initial,xcomp,ycomp):
 		x_prop[j] = x
 		y_prop[j] = y
 	return x_prop, y_prop
-	
-##=============================================================================
-
-def force(x, y, k, r):
-	pos = (x**2+y**2)**(0.5)
-	if pos >= r:
-		xforce = -k*(x-r*(x/pos))
-		yforce = -k*(y-r*(y/pos))
-	else:
-		xforce = 0.0
-		yforce = 0.0
-	return pos, xforce, yforce 
-	
+		
 ##=============================================================================
 
 def position(propx, propy, xo, yo, dt, r, k):
@@ -146,6 +138,16 @@ def position(propx, propy, xo, yo, dt, r, k):
 	
 ##=============================================================================
 
+def force(x, y, k, r):
+	pos = (x**2+y**2)**(0.5)
+	if pos >= r:
+		xforce = -k*(x-r*(x/pos))
+		yforce = -k*(y-r*(y/pos))
+	else:
+		xforce = 0.0
+		yforce = 0.0
+	return pos, xforce, yforce 
+	
 def radial_PE_landscape(x, r):
 	if x < r: 
 		U = 0.0

@@ -25,7 +25,7 @@ def plot2d(histfile):
 	plt.title("Radial Density ($\\alpha = %s$, $\\beta = %s$, tmax = %s)" %(alpha, beta,tmax))
 	plt.xlabel("Position")  
 	plt.legend(loc = 'upper right')
-	plt.savefig("Datafiles/PDFr_2D_tmax%s_alpha%s_beta%s.png" %(tmax,alpha,beta))
+	plt.savefig("Datafiles/PDFr_2D_tmax%s_alpha%s_beta%s.jpg" %(tmax,alpha,beta))
 	
 	return
 	

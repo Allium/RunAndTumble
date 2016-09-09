@@ -89,6 +89,8 @@ def pressure_pdf_file(histfile, nosave, verbose):
 	
 	## Load histogram, convert to normalised pdf
 	H = data["H_rad"]
+	try:	H = H.sum(axis=1)
+	except ValueError:	pass
 	rho = H / np.trapz(H*2*np.pi*r, r)
 
 	## Potential and equilibrium result
@@ -263,15 +265,18 @@ def pressure_dir(dirpath, nosave, verbose):
 				PP[i,j] = np.nan
 				PP_eq[i,j] = np.nan
 	
-	plotfile = dirpath+"/PRESSab_line.jpg"
+	## Plotting
+	
 	fig = plt.figure(); ax = plt.gca()
 	
-	# for i in range(BB.size):
-		# ax.plot(AA, PP[:,i], "o-", label="$\\beta="+str(BB[i])+"$")
-	# ax.set_xlabel("$\\alpha$",fontsize=fsa)
-	for i in range(AA.size):
-		ax.plot(BB, PP[i,:], "o-", label="$\\alpha="+str(AA[i])+"$")
-	ax.set_xlabel("$\\beta$",fontsize=fsa)
+	plotfile = dirpath+"/PRESSab_line.jpg"
+	for i in range(BB.size):
+		ax.plot(AA, PP[:,i], "o-", label="$\\beta="+str(BB[i])+"$")
+	ax.set_xlabel("$\\alpha$",fontsize=fsa)
+	# plotfile = dirpath+"/PRESSba_line.jpg"
+	# for i in range(AA.size):
+		# ax.plot(BB, PP[i,:], "o-", label="$\\alpha="+str(AA[i])+"$")
+	# ax.set_xlabel("$\\beta$",fontsize=fsa)
 	
 	ax.set_xlim(left=0.0);	ax.set_ylim(bottom=0.0)
 	# ax.set_xlim(right=2.0);	ax.set_ylim(top=2.0); plotfile = plotfile[:-4]+"_zoom.jpg"
