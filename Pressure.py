@@ -143,13 +143,12 @@ def pressure_pdf_file(histfile, nosave, verbose):
 	ax.set_ylim(bottom=0.0, top=ax.get_ylim()[1])
 	ax.set_xlabel("$r$", fontsize=fsa)
 	ax.set_ylabel("$P(r)$", fontsize=fsa)
+	ax.legend(loc="best",fontsize=fsl)
 	ax.grid()
 	
 	## Wall
 	ax.plot(r_eq, U*ax.get_ylim()[1]/U[-1], "k--", label="$U(r)$")
 
-	ax.legend(loc="best",fontsize=fsl)
-	
 	##---------------------------------------------------------------
 	
 	## Tidy figure

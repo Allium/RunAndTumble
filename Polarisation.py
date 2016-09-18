@@ -6,6 +6,7 @@ import os, glob, optparse
 from time import time
 
 from persistant_motion_2D_PE_landscape import radial_PE_landscape
+from Pressure import filename_par
 
 ##=============================================================================
 
@@ -54,11 +55,8 @@ def main():
 	if plotall and os.path.isdir(path):
 		showfig = False
 		allfiles(path, nosave, verbose)
-		
 	elif os.path.isfile(path):
-		pressure_pdf_file(path, nosave, verbose)
-	elif os.path.isdir(path):
-		pressure_dir(path, nosave, verbose)
+		polarisation_pdf_file(path, nosave, verbose)
 	else:
 		raise IOError, me+"You gave me rubbish. Abort."
 	
@@ -85,24 +83,29 @@ def polarisation_pdf_file(histfile, nosave, verbose):
 	
 	## Space (for axes)
 	data = np.load(histfile)
-	r = data["bin_center_rad"]
-	th = data["bin_center_theta"]
+	r_bins = data["bin_rad_ang"]
+	r = 0.5*(r_bins[:-1]+r_bins[1:])
+	th_bins = data["bin_ang"]
+	th = 0.5*(th_bins[:-1]+th_bins[1:])
 	
-	## Load histogram, normalise
-	H = data["H_rad"]
-	rho = H / np.trapz(np.trapz(H*2*np.pi*r,r,axis=0),th)
+	## Load histogram, convert to density, normalise
+	H = data["H_ang"]
+	rho = (H.T / (2*np.pi*r)).T
+	rho /= np.trapz(np.trapz(H,th,axis=1),r,axis=0)
 
-	## Potential and equilibrium result
+	## Potential
 	r_eq = np.linspace(r[0],R+4.0,50*int(R+4.0-r[0]))
 	th_eq = th
 	U = np.array([radial_PE_landscape(ri, R) for ri in r_eq])
-	rho_eq = np.exp(-U) / np.trapz(np.exp(-U)*2*np.pi*r_eq, r_eq)
+	## Equilibrium density, normalised
+	rho_eq = np.exp(-U)[:,np.newaxis].repeat(th_eq.size, axis=1)
+	rho_eq /= np.trapz(np.trapz(rho_eq,th_eq,axis=1)*2*np.pi*r_eq,r_eq,axis=0)
 			
 	##---------------------------------------------------------------			
 	## PLOT SET-UP
 	
 	figtit = "Density and polarisation; quadratic potential; $\\alpha="+str(a)+"$, $\\beta = "+str(b)+"$"
-	fsa, fsl, fst = 16,12,16
+	fsa, fsl, fst = 16,10,16
 	
 	fig, axs = plt.subplots(3,1,sharex=True)
 		
@@ -111,10 +114,10 @@ def polarisation_pdf_file(histfile, nosave, verbose):
 
 	ax = axs[0]
 	
-	ax.plot(r,rho.sum(axis=0),   "b-", label="RTP")
-	ax.fill_between(r, 0, rho, color="b", alpha=0.1)
-	ax.plot(r_eq,rho_eq,"r-", label="Eq.")
-	ax.fill_between(r_eq, 0, rho_eq, color="r", alpha=0.1)
+	ax.plot(r,rho.sum(axis=1),   "b-", label="RTP")
+	ax.fill_between(r, 0, rho.sum(axis=1), color="b", alpha=0.1)
+	ax.plot(r_eq,rho_eq.sum(axis=1),"r-", label="Eq.")
+	ax.fill_between(r_eq, 0, rho_eq.sum(axis=1), color="r", alpha=0.1)
 	
 	## Accoutrements
 	ax.set_xlim([0.0,R+4.0])
@@ -124,7 +127,7 @@ def polarisation_pdf_file(histfile, nosave, verbose):
 	
 	## Wall
 	ax.plot(r_eq, U*ax.get_ylim()[1]/U[-1], "k--", label="$U(r)$")
-	
+
 	##---------------------------------------------------------------
 	## POLARISATION
 	
@@ -139,14 +142,15 @@ def polarisation_pdf_file(histfile, nosave, verbose):
 	ax = axs[1]
 	
 	## Pressure
-	ax.plot(r,m1c, "b-",  label="RTP $\\langle\\cos\\theta\\rangle(r)")
-	ax.plot(r,m1s, "b--", label="RTP $\\langle\\sin\\theta\\rangle(r)")
-	ax.plot(r_eq,m1c_eq,"r-",  label="Eq. $\\langle\\cos\\theta\\rangle(r)")
-	ax.plot(r_eq,m1s_eq,"r--", label="Eq. $\\langle\\sin\\theta\\rangle(r)")
+	ax.plot(r,m1c, "b-",  label=r"RTP $\langle\cos\theta\rangle(r)$")
+	ax.plot(r,m1s, "b--", label=r"RTP $\langle\sin\theta\rangle(r)$")
+	ax.plot(r_eq,m1c_eq,"r-",  label=r"Eq. $\langle\cos\theta\rangle(r)$")
+	ax.plot(r_eq,m1s_eq,"r--", label=r"Eq. $\langle\sin\theta\rangle(r)$")
 	
 	## Accoutrements
 	ax.set_ylabel("First moments", fontsize=fsa)
 	ax.grid()
+	ax.legend(loc="lower right",fontsize=fsl)
 	
 	## Wall
 	ax.plot(r_eq, U*ax.get_ylim()[1]/U[-1], "k--", label="$U(r)$")
@@ -155,21 +159,21 @@ def polarisation_pdf_file(histfile, nosave, verbose):
 	ax = axs[2]
 	
 	## Pressure
-	ax.plot(r,m2c, "b-",  label="RTP $\\langle\\cos^2\\theta\\rangle(r)")
-	ax.plot(r,m2s, "b--", label="RTP $\\langle\\sin^2\\theta\\rangle(r)")
-	ax.plot(r_eq,m2c_eq,"r-",  label="Eq. $\\langle\\cos^2\\theta\\rangle(r)")
-	ax.plot(r_eq,m2s_eq,"r--", label="Eq. $\\langle\\sin^2\\theta\\rangle(r)")
+	ax.plot(r,m2c, "b-",  label=r"RTP $\langle\cos^2\theta\rangle(r)$")
+	ax.plot(r,m2s, "b--", label=r"RTP $\langle\sin^2\theta\rangle(r)$")
+	ax.plot(r_eq,m2c_eq,"r-",  label=r"Eq. $\langle\cos^2\theta\rangle(r)$")
+	ax.plot(r_eq,m2s_eq,"r--", label=r"Eq. $\langle\sin^2\theta\rangle(r)$")
 	
 	## Accoutrements
 	ax.set_ylabel("Second moments", fontsize=fsa)
 	ax.grid()
+	ax.legend(loc="lower right",fontsize=fsl)
 	
 	## Wall
 	ax.plot(r_eq, U*ax.get_ylim()[1]/U[-1], "k--", label="$U(r)$")
 	
 	## Bottom figure
 	ax.set_xlabel("$r$", fontsize=fsa)
-	ax.legend(loc="best",fontsize=fsl)
 	
 	##---------------------------------------------------------------
 	
@@ -190,26 +194,14 @@ def allfiles(dirpath, nosave, verbose):
 		plt.close()
 	return
 
-## ============================================================================
-
-def filename_par(filename, searchstr):
-	"""
-	Scrape filename for parameters and return a dict.
-	"""
-	start = filename.find(searchstr) + len(searchstr)
-	finish = start + 1
-	while unicode(filename[start:].replace(".",""))[:finish-start].isnumeric():
-		finish += 1
-	return float(filename[start:finish])
-	
 ##=============================================================================
 
 def calc_angular_moment(th,rho,k):
 	"""
 	Calculate polarisation given density function of coordinate r and body angle th.
 	"""
-	mkc = 2*np.pi* np.trapz(rho*np.power(np.cos(th),k),th,axis=1) / np.trapz(rho,th,axis=1)
-	mks = 2*np.pi* np.trapz(rho*np.power(np.sin(th),k),th,axis=1) / np.trapz(rho,th,axis=1)
+	mkc = np.trapz(rho*np.power(np.cos(th),k),th,axis=1) / np.trapz(rho,th,axis=1)
+	mks = np.trapz(rho*np.power(np.sin(th),k),th,axis=1) / np.trapz(rho,th,axis=1)
 	return (mkc, mks)
 	
 ## ============================================================================
